@@ -1,5 +1,9 @@
 # MiniZero
 
+This fork is for adding support for the HUNTER×HUNTER game gungi
+
+# Original README
+
 MiniZero is a zero-knowledge learning framework that supports AlphaZero, MuZero, Gumbel AlphaZero, and Gumbel MuZero algorithms.
 
 This is the official repository of the IEEE ToG paper [MiniZero: Comparative Analysis of AlphaZero and MuZero on Go, Othello, and Atari Games](https://rlg.iis.sinica.edu.tw/papers/minizero).
