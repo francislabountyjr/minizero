@@ -74,6 +74,7 @@ extern std::string nn_type_name;
 
 // environment parameters
 extern int env_board_size;
+extern std::string env_gungi_ruleset;
 
 // environment parameters for specific game
 extern std::string env_atari_rom_dir;

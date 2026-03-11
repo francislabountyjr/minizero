@@ -1,5 +1,6 @@
 #include "configuration.h"
 #include "data_loader.h"
+#include "environment.h"
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -81,4 +82,109 @@ PYBIND11_MODULE(minizero_py, m)
                 data_loader.sampleData();
             },
             py::call_guard<py::gil_scoped_release>());
+
+#if GUNGI
+    auto piece_symbol = [](minizero::env::gungi::GungiPieceType type) {
+        using minizero::env::gungi::GungiPieceType;
+        switch (type) {
+            case GungiPieceType::kMarshal: return std::string{u8"\u5e25"};
+            case GungiPieceType::kGeneral: return std::string{u8"\u5927"};
+            case GungiPieceType::kLieutenantGeneral: return std::string{u8"\u4e2d"};
+            case GungiPieceType::kMajorGeneral: return std::string{u8"\u5c0f"};
+            case GungiPieceType::kWarrior: return std::string{u8"\u4f8d"};
+            case GungiPieceType::kLancer: return std::string{u8"\u69cd"};
+            case GungiPieceType::kRider: return std::string{u8"\u99ac"};
+            case GungiPieceType::kSpy: return std::string{u8"\u5fcd"};
+            case GungiPieceType::kFortress: return std::string{u8"\u7826"};
+            case GungiPieceType::kSoldier: return std::string{u8"\u5175"};
+            case GungiPieceType::kCannon: return std::string{u8"\u7832"};
+            case GungiPieceType::kArcher: return std::string{u8"\u5f13"};
+            case GungiPieceType::kMusketeer: return std::string{u8"\u7b52"};
+            case GungiPieceType::kTactician: return std::string{u8"\u8b00"};
+            default: return std::string{};
+        }
+    };
+
+    auto piece_to_dict = [piece_symbol](const minizero::env::gungi::GungiPiece& piece) {
+        py::dict result;
+        result["type"] = piece_symbol(piece.type);
+        result["color"] = std::string(1, piece.player == minizero::env::Player::kPlayer1 ? 'b' : 'w');
+        result["square"] = std::to_string(piece.rank) + "-" + std::to_string(piece.file);
+        result["tier"] = piece.tier;
+        return result;
+    };
+
+    auto move_to_dict = [piece_symbol, piece_to_dict](const minizero::env::gungi::GungiMove& move) {
+        py::dict result;
+        result["san"] = move.san;
+        result["piece"] = piece_symbol(move.piece_type);
+        result["color"] = std::string(1, move.player == minizero::env::Player::kPlayer1 ? 'b' : 'w');
+        result["from"] = (move.from_tier == 0 ? "" : std::to_string(move.from_rank) + "-" + std::to_string(move.from_file) + "-" + std::to_string(move.from_tier));
+        result["to"] = std::to_string(move.to_rank) + "-" + std::to_string(move.to_file) + "-" + std::to_string(move.to_tier);
+        switch (move.type) {
+            case minizero::env::gungi::GungiMoveType::kRoute: result["type"] = "route"; break;
+            case minizero::env::gungi::GungiMoveType::kCapture: result["type"] = "capture"; break;
+            case minizero::env::gungi::GungiMoveType::kTsuke: result["type"] = "tsuke"; break;
+            case minizero::env::gungi::GungiMoveType::kBetray: result["type"] = "betray"; break;
+            case minizero::env::gungi::GungiMoveType::kArata: result["type"] = "arata"; break;
+        }
+        if (move.draft_finished) {
+            result["draftFinished"] = py::bool_(true);
+        } else {
+            result["draftFinished"] = py::none();
+        }
+        py::list captured;
+        for (const auto& piece : move.captured) { captured.append(piece_to_dict(piece)); }
+        result["captured"] = captured;
+        result["before"] = move.before_fen;
+        result["after"] = move.after_fen;
+        return result;
+    };
+
+    py::class_<minizero::env::gungi::GungiEnv>(m, "GungiEnv")
+        .def(py::init<>())
+        .def(py::init([](const std::string& fen) {
+            auto env = std::make_unique<minizero::env::gungi::GungiEnv>();
+            env->loadFen(fen);
+            return env;
+        }))
+        .def("reset", &minizero::env::gungi::GungiEnv::reset)
+        .def("load", &minizero::env::gungi::GungiEnv::load)
+        .def("load_fen", &minizero::env::gungi::GungiEnv::loadFen)
+        .def("fen", &minizero::env::gungi::GungiEnv::getFen)
+        .def("turn", &minizero::env::gungi::GungiEnv::getTurnString)
+        .def("move_number", &minizero::env::gungi::GungiEnv::getMoveNumber)
+        .def("drafting", &minizero::env::gungi::GungiEnv::getDraftingRights)
+        .def("in_draft", &minizero::env::gungi::GungiEnv::inDraft)
+        .def("moves", &minizero::env::gungi::GungiEnv::getMoveStrings)
+        .def("moves_verbose", [move_to_dict](const minizero::env::gungi::GungiEnv& env) {
+            py::list moves;
+            for (const auto& move : env.getMovesVerbose()) { moves.append(move_to_dict(move)); }
+            return moves;
+        })
+        .def("legal_moves", &minizero::env::gungi::GungiEnv::getLegalMoveStrings)
+        .def("legal_moves_verbose", [move_to_dict](const minizero::env::gungi::GungiEnv& env) {
+            py::list moves;
+            for (const auto& move : env.getLegalMovesVerbose()) { moves.append(move_to_dict(move)); }
+            return moves;
+        })
+        .def("history", &minizero::env::gungi::GungiEnv::getMoveHistorySan)
+        .def("history_verbose", [move_to_dict](const minizero::env::gungi::GungiEnv& env) {
+            py::list moves;
+            for (const auto& move : env.getMoveHistoryVerbose()) { moves.append(move_to_dict(move)); }
+            return moves;
+        })
+        .def("move", &minizero::env::gungi::GungiEnv::move)
+        .def("act_san", &minizero::env::gungi::GungiEnv::actSan)
+        .def("undo", &minizero::env::gungi::GungiEnv::undo)
+        .def("in_check", [](const minizero::env::gungi::GungiEnv& env) { return env.inCheck(); })
+        .def("is_checkmate", &minizero::env::gungi::GungiEnv::isCheckmate)
+        .def("is_stalemate", &minizero::env::gungi::GungiEnv::isStalemate)
+        .def("is_insufficient_material", &minizero::env::gungi::GungiEnv::isInsufficientMaterial)
+        .def("is_fourfold_repetition", &minizero::env::gungi::GungiEnv::isFourfoldRepetition)
+        .def("is_draw", &minizero::env::gungi::GungiEnv::isDraw)
+        .def("is_game_over", &minizero::env::gungi::GungiEnv::isTerminal)
+        .def("eval_score", &minizero::env::gungi::GungiEnv::getEvalScore)
+        .def("features", [](const minizero::env::gungi::GungiEnv& env) { return env.getFeatures(); });
+#endif
 }

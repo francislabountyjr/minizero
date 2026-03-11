@@ -72,6 +72,7 @@ std::string nn_type_name = "alphazero";
 
 // environment parameters
 int env_board_size = 0;
+std::string env_gungi_ruleset = "advanced";
 std::string env_atari_rom_dir = "/opt/atari57/";
 std::string env_atari_name = "ms_pacman";
 bool env_conhex_use_swap_rule = true;
@@ -172,6 +173,8 @@ void setConfiguration(ConfigureLoader& cl)
 #elif GO
     cl.addParameter("env_go_komi", env_go_komi, "the komi in Go", "Environment");
     cl.addParameter("env_go_ko_rule", env_go_ko_rule, "the ko rules in Go: positional (only consider stones), situational (consider stones and the turn)", "Environment");
+#elif GUNGI
+    cl.addParameter("env_gungi_ruleset", env_gungi_ruleset, "the enforced Gungi ruleset for the current run: any, intro, beginner, intermediate, or advanced", "Environment");
 #elif GOMOKU
     cl.addParameter("env_gomoku_rule", env_gomoku_rule, "the opening rule in Gomoku: standard (standard Gomoku rule), outer_open (restricted first Black move)", "Environment");
     cl.addParameter("env_gomoku_exactly_five_stones", env_gomoku_exactly_five_stones, "true for standard Gomoku; false for freestyle Gomoku (allow winning with more than five stones, i.e., an overline)", "Environment");

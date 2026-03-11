@@ -22,8 +22,8 @@ build_game() {
 
 	# check whether the build type and cache are consistent
 	if [ -f "build/${game_type}/CMakeCache.txt" ]; then
-		cache_build_type=$(grep -oP "CMAKE_BUILD_TYPE:STRING=\K\w+" build/${game_type}/CMakeCache.txt)
-		if [ "${cache_build_type}" != "${build_type}" ]; then
+		cache_build_type=$(grep -oP "CMAKE_BUILD_TYPE:STRING=\K\w+" build/${game_type}/CMakeCache.txt || true)
+		if [ -z "${cache_build_type}" ] || [ "${cache_build_type}" != "${build_type}" ]; then
 			rm -rf build/${game_type}
 		fi
 	fi

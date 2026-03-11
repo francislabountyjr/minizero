@@ -122,6 +122,27 @@ The training results are stored in a folder named after the important training s
 
 After the training, you can use the trained network models (saved inside `model/`) to run [evaluation](Evaluation.md) or [console](Console.md).
 
+To package an app-ready Gungi checkpoint bundle for the [desktop client](https://github.com/francislabountyjr/gungi-app), use:
+
+```bash
+python tools/export_gungi_model_bundle.py --training-dir gungi_gaz_main --step 200
+```
+
+That creates `gungi_gaz_main/exports/gungi_gaz_200_advanced/` containing:
+- `model.pt`
+- `model.json`
+
+The exporter also supports downloading a training folder checkpoint from Hugging Face first:
+
+```bash
+python tools/export_gungi_model_bundle.py \
+  --hf-repo-id your-org/your-gungi-checkpoints \
+  --hf-training-dir gungi_gaz_main \
+  --step 200
+```
+
+The current desktop app only imports AlphaZero-shaped Gungi checkpoints, so MuZero / Gumbel MuZero runs are detected but rejected as not yet app-compatible.
+
 On the other hand, you can check self-play records (saved inside `sgf/`) by GoGui or by videos.
 
 For board games, use [GoGui](https://github.com/Remi-Coulom/gogui) to view self-play records.

@@ -42,6 +42,11 @@ typedef minizero::env::dotsandboxes::DotsAndBoxesEnvLoader EnvironmentLoader;
 typedef minizero::env::go::GoAction Action;
 typedef minizero::env::go::GoEnv Environment;
 typedef minizero::env::go::GoEnvLoader EnvironmentLoader;
+#elif GUNGI
+#include "gungi.h"
+typedef minizero::env::gungi::GungiAction Action;
+typedef minizero::env::gungi::GungiEnv Environment;
+typedef minizero::env::gungi::GungiEnvLoader EnvironmentLoader;
 #elif GOMOKU
 #include "gomoku.h"
 typedef minizero::env::gomoku::GomokuAction Action;
@@ -121,6 +126,8 @@ inline void setUpEnv()
     breakthrough::initialize();
 #elif GO
     go::initialize();
+#elif GUNGI
+    gungi::initialize();
 #elif KILLALLGO
     killallgo::initialize();
 #elif LINESOFACTION
@@ -147,6 +154,8 @@ inline void setUpEnv()
 #elif DOTSANDBOXES
     config::env_board_size = 9;
 #elif GO
+    config::env_board_size = 9;
+#elif GUNGI
     config::env_board_size = 9;
 #elif HAVANNAH
     config::env_board_size = 8;

@@ -7,10 +7,12 @@ __pycache__
 
 # training folder
 *_az_*/
-*_gaz_*/
+*_gaz*/
 *_mz_*/
 *_gmz_*/
 
 # others
 .vscode
 .container_root
+
+command.txt

@@ -24,21 +24,28 @@ class ResidualBlock(nn.Module):
 
 
 class PolicyNetwork(nn.Module):
-    def __init__(self, num_channels, channel_height, channel_width, action_size):
+    def __init__(self, num_channels, channel_height, channel_width, action_size, spatial_policy=False):
         super(PolicyNetwork, self).__init__()
         self.channel_height = channel_height
         self.channel_width = channel_width
+        self.action_size = action_size
+        self.spatial_policy = spatial_policy
         self.num_output_channels = math.ceil(action_size / (channel_height * channel_width))
         self.conv = nn.Conv2d(num_channels, self.num_output_channels, kernel_size=1)
         self.bn = nn.BatchNorm2d(self.num_output_channels)
-        self.fc = nn.Linear(self.num_output_channels * channel_height * channel_width, action_size)
+        self.fc = nn.Identity()
+        if not self.spatial_policy:
+            self.fc = nn.Linear(self.num_output_channels * channel_height * channel_width, action_size)
 
     def forward(self, x):
         x = self.conv(x)
         x = self.bn(x)
         x = F.relu(x)
         x = x.view(-1, self.num_output_channels * self.channel_height * self.channel_width)
-        x = self.fc(x)
+        if self.spatial_policy:
+            x = x[:, : self.action_size]
+        else:
+            x = self.fc(x)
         return x
 
 

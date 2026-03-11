@@ -42,6 +42,7 @@ It includes a variety of zero-knowledge learning algorithms:
 * Gumbel MuZero
 
 It supports a variety of game environments:
+* Gungi
 * Go
 * NoGo
 * Killall-Go
